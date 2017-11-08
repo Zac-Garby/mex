@@ -17,7 +17,7 @@ pub struct NumberLiteral {
 
 impl Node for NumberLiteral {
     fn to_string(&self) -> String {
-        format!("{}", self.value)
+        format!("({})", self.value)
     }
 }
 
@@ -29,7 +29,7 @@ pub struct Identifier {
 
 impl Node for Identifier {
     fn to_string(&self) -> String {
-        self.value.clone()
+        format!("({})", self.value)
     }
 }
 
@@ -43,6 +43,6 @@ pub struct Infix {
 
 impl Node for Infix {
     fn to_string(&self) -> String {
-        format!("{} {} {}", self.left.to_string(), self.op, self.right.to_string())
+        format!("({} {} {})", self.left.to_string(), self.op, self.right.to_string())
     }
 }
