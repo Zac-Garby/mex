@@ -1,19 +1,16 @@
-mod scanner;
-mod operator;
-
-use scanner::token::Token;
-use operator::Operator;
+use ::parser::operator;
 
 // Any AST node. No distinguishing needed between
 // expressions and statements, because everything
 // is an expression.
 pub trait Node {
     fn to_string(&self) -> String {
-        "<to_string not defined>"
+        String::from("<to_string not defined>")
     }
 }
 
 // A number literal, i.e. '420'
+#[allow(unused)]
 pub struct NumberLiteral {
     pub value: f64,
 }
@@ -25,20 +22,23 @@ impl Node for NumberLiteral {
 }
 
 // An identifier, i.e. 'π'
+#[allow(unused)]
 pub struct Identifier {
     pub value: String,
 }
 
 impl Node for Identifier {
     fn to_string(&self) -> String {
-        self.value
+        self.value.clone()
     }
 }
 
 // An infix expression, i.e. 'ƒ + 3'
+#[allow(unused)]
 pub struct Infix {
-    pub left, right: Node,
-    pub op: Operator,
+    pub left: Box<Node>,
+    pub right: Box<Node>,
+    pub op: operator::Operator,
 }
 
 impl Node for Infix {
