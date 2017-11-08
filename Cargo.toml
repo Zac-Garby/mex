@@ -1,0 +1,6 @@
+[package]
+name = "calc"
+version = "0.1.0"
+authors = ["Zac Garby <zacgarby@icloud.com>"]
+
+[dependencies]
