@@ -1,6 +1,8 @@
 mod scanner;
+mod operator;
 
 use scanner::token::Token;
+use operator::Operator;
 
 // Any AST node.
 pub trait Node {
@@ -42,5 +44,17 @@ pub struct Identifier {
 impl Node for Identifier {
     fn to_string(&self) -> String {
         self.value
+    }
+}
+
+// An infix expression, i.e. 'ƒ + 3'
+pub struct Infix {
+    pub left, right: Node,
+    pub op: Operator,
+}
+
+impl Node for Infix {
+    fn to_string(&self) -> String {
+        format!("{} {} {}", self.left.to_string(), self.op, self.right.to_string())
     }
 }
