@@ -4,24 +4,12 @@ mod operator;
 use scanner::token::Token;
 use operator::Operator;
 
-// Any AST node.
+// Any AST node. No distinguishing needed between
+// expressions and statements, because everything
+// is an expression.
 pub trait Node {
     fn to_string(&self) -> String {
         "<to_string not defined>"
-    }
-}
-
-// An abstract syntax tree. Represents an entire
-// program's syntax.
-pub struct AST {
-    pub statements: Vec<Node>,
-}
-
-impl Node for AST {
-    fn to_string(&self) -> String {
-        self.statements
-            .iter()
-            .fold(String::new(), |out, stmt| out + stmt.to_string());
     }
 }
 
