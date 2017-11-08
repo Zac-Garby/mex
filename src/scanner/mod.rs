@@ -7,7 +7,7 @@ pub struct Scanner {
 
 impl Scanner {
     #[allow(dead_code)]
-    pub fn new<'b>(s: String) -> Scanner {
+    pub fn new(s: String) -> Scanner {
         let chars = s.chars().collect::<Vec<char>>();
         let next_index = 0;
 
