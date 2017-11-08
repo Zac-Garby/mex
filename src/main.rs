@@ -1,6 +1,7 @@
 extern crate calc;
 
 mod scanner;
+mod parser;
 
 use std::io;
 use std::io::prelude::*;
