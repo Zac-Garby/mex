@@ -1,48 +1,28 @@
-use ::parser::operator;
+use std::fmt;
 
-// Any AST node. No distinguishing needed between
-// expressions and statements, because everything
-// is an expression.
-pub trait Node {
-    fn to_string(&self) -> String {
-        String::from("<to_string not defined>")
-    }
-}
-
-// A number literal, i.e. '420'
+// The various types of operators.
 #[allow(unused)]
-pub struct NumberLiteral {
-    pub value: f64,
+pub enum Operator {
+    Add,
+    Subtract,
+    Multiply,
+    Divide,
 }
 
-impl Node for NumberLiteral {
-    fn to_string(&self) -> String {
-        format!("({})", self.value)
+impl fmt::Display for Operator {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", match self {
+            &Operator::Add      => "+",
+            &Operator::Subtract => "-",
+            &Operator::Multiply => "*",
+            &Operator::Divide   => "/",
+        })
     }
 }
 
-// An identifier, i.e. 'π'
-#[allow(unused)]
-pub struct Identifier {
-    pub value: String,
-}
-
-impl Node for Identifier {
-    fn to_string(&self) -> String {
-        format!("({})", self.value)
-    }
-}
-
-// An infix expression, i.e. 'ƒ + 3'
-#[allow(unused)]
-pub struct Infix {
-    pub left: Box<Node>,
-    pub right: Box<Node>,
-    pub op: operator::Operator,
-}
-
-impl Node for Infix {
-    fn to_string(&self) -> String {
-        format!("({} {} {})", self.left.to_string(), self.op, self.right.to_string())
-    }
+#[allow(dead_code)]
+pub enum Node {
+    Number(f64),
+    Identifier(String),
+    Infix { left: Box<Node>, right: Box<Node>, op: Operator },
 }
