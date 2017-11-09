@@ -13,8 +13,8 @@ fn main() {
         let mut input = String::new();
         io::stdin().read_line(&mut input).expect("couldn't read input");
 
-        let parse = Parser::new(input);
-        let expr = parse.parse_expression();
+        let mut parse = Parser::new(input);
+        let expr = parse.parse_expression(0);
 
         println!("{:?}", expr);
     }

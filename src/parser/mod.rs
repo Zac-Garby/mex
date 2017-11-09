@@ -3,6 +3,7 @@ mod ast;
 use super::scanner;
 use super::scanner::token;
 use self::ast::Node::*;
+use self::ast::Operator;
 
 pub struct ParseError {
     pub message: String,
@@ -30,6 +31,14 @@ impl Parser {
         p
     }
 
+    fn peek_precedence(&self) -> usize {
+        self.peek.get_precedence()
+    }
+
+    fn cur_precedence(&self) -> usize {
+        self.cur.get_precedence()
+    }
+
     fn next(&mut self) {
         let peek = self.peek.clone();
         self.cur = peek;
@@ -51,23 +60,52 @@ impl Parser {
         self.errors.push(err);
     }
 
-    pub fn parse_expression(&self) -> ast::Node {
+    pub fn parse_expression(&mut self, precedence: usize) -> Option<ast::Node> {
         self.parse_prefix()
     }
 
-    fn parse_prefix(&self) -> ast::Node {
-        Number(0.0)
+    fn parse_prefix(&mut self) -> Option<ast::Node> {
+        match self.cur.t {
+            token::Type::Identifier => Some(self.parse_id()),
+            token::Type::Number     => Some(self.parse_number()),
+
+            _ => None,
+        }
     }
 
-    fn parse_infix(&self, left: ast::Node) -> ast::Node {
+    fn parse_infix(&mut self, left: ast::Node) -> ast::Node {
         left
     }
 
-    fn parse_id(&self) -> ast::Node {
+    fn parse_id(&mut self) -> ast::Node {
         Identifier(String::from("hello"))
     }
 
-    fn parse_number(&self) -> ast::Node {
+    fn parse_number(&mut self) -> ast::Node {
         Number(0.0)
+    }
+
+    fn parse_normal_infix(&mut self, left: ast::Node) -> ast::Node {
+        let op = match self.cur.t {
+            token::Type::Plus => Operator::Add,
+            token::Type::Minus => Operator::Subtract,
+            token::Type::Multiply => Operator::Multiply,
+            token::Type::Divide => Operator::Divide,
+
+            _ => panic!("invalid infix operator token type: {:?}", self.cur.t),
+        };
+
+        let precedence = self.cur_precedence();
+        self.next();
+
+        if let Some(right) = self.parse_expression(precedence) {
+            ast::Node::Infix{
+                left: Box::new(left),
+                op,
+                right: Box::new(right),
+            }
+        } else {
+            panic!("unexpected None from parse_expression")
+        }
     }
 }
