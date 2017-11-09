@@ -34,8 +34,8 @@ impl Scanner {
         Some(self.chars[self.next_index])
     }
 
-    fn take_while<T>(&mut self, pred: T) -> String
-        where T: Fn(char) -> bool
+    fn take_while<T>(&mut self, mut pred: T) -> String
+        where T: FnMut(char) -> bool
     {
         let mut out: String = String::new();
 
@@ -75,7 +75,17 @@ impl Iterator for Scanner {
             }
 
             Some(c) if c.is_digit(10) => {
-                let literal = self.take_while(|x| x.is_digit(10));
+                let mut has_dot = false;
+
+                let literal = self.take_while(|x| {
+                    if x == '.' && !has_dot {
+                        has_dot = true;
+                        true
+                    } else {
+                        x.is_digit(10)
+                    }
+                });
+
                 (literal, token::Type::Number, false)
             }
 
