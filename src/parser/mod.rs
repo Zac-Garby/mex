@@ -64,6 +64,17 @@ impl Parser {
         self.errors.push(err);
     }
 
+    fn expect(&mut self, t: token::Type) -> bool {
+        if self.peek.t == t {
+            self.next();
+            true
+        } else {
+            let got = self.peek.t.clone();
+            self.err(&format!("expected {:?}, got {:?}", t, got));
+            false
+        }
+    }
+
     pub fn parse_expression(&mut self, precedence: usize) -> Option<ast::Node> {
         let mut left = self.parse_prefix();
 
@@ -91,6 +102,7 @@ impl Parser {
         match self.cur.t {
             token::Type::Identifier => Some(self.parse_id()),
             token::Type::Number     => Some(self.parse_number()),
+            token::Type::LeftParen  => Some(self.parse_group()),
 
             _ => None,
         }
@@ -116,6 +128,18 @@ impl Parser {
         match val {
             Ok(v) => Number(v),
             Err(e) => panic!(e),
+        }
+    }
+
+    fn parse_group(&mut self) -> ast::Node {
+        self.next();
+        let expr = self.parse_expression(0);
+
+        self.expect(token::Type::RightParen);
+
+        match expr {
+            Some(e) => e,
+            None    => panic!("unexpected None in parse_group"),
         }
     }
 
