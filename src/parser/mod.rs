@@ -4,6 +4,7 @@ use super::scanner;
 use super::scanner::token;
 use self::ast::Node::*;
 use self::ast::Operator;
+use std::num::ParseFloatError;
 
 pub struct ParseError {
     pub message: String,
@@ -61,7 +62,26 @@ impl Parser {
     }
 
     pub fn parse_expression(&mut self, precedence: usize) -> Option<ast::Node> {
-        self.parse_prefix()
+        let mut left = self.parse_prefix();
+
+        if left.is_none() {
+            let t = self.cur.clone().t;
+            self.err(&format!("unexpected token: {:?}", t));
+            return None
+        }
+
+        while precedence < self.peek_precedence() {
+            let infix = self.parse_infix(left.clone().unwrap());
+
+            if infix.is_none() {
+                return left
+            }
+
+            self.next();
+            left = infix;
+        }
+
+        left
     }
 
     fn parse_prefix(&mut self) -> Option<ast::Node> {
@@ -73,37 +93,61 @@ impl Parser {
         }
     }
 
-    fn parse_infix(&mut self, left: ast::Node) -> ast::Node {
-        left
+    fn parse_infix(&mut self, left: ast::Node) -> Option<ast::Node> {
+        if self.cur.t == token::Type::Equals {
+            self.parse_equals_infix(left)
+        } else {
+            self.parse_normal_infix(left)
+        } 
     }
 
     fn parse_id(&mut self) -> ast::Node {
-        Identifier(String::from("hello"))
+        Identifier(self.cur.literal.clone())
     }
 
     fn parse_number(&mut self) -> ast::Node {
-        Number(0.0)
+        let val: Result<f64, ParseFloatError> = self.cur.literal.parse();
+
+        match val {
+            Ok(v) => Number(v),
+            Err(e) => panic!(e),
+        }
     }
 
-    fn parse_normal_infix(&mut self, left: ast::Node) -> ast::Node {
+    fn parse_equals_infix(&mut self, left: ast::Node) -> Option<ast::Node> {
+        let precedence = self.cur_precedence();
+        self.next();
+
+        if let Some(right) = self.parse_expression(precedence) {
+            Some(ast::Node::Infix{
+                left: Box::new(left),
+                op: Operator::Assign,
+                right: Box::new(right),
+            })
+        } else {
+            panic!("unexpected None from parse_expression")
+        }
+    }
+
+    fn parse_normal_infix(&mut self, left: ast::Node) -> Option<ast::Node> {
         let op = match self.cur.t {
             token::Type::Plus => Operator::Add,
             token::Type::Minus => Operator::Subtract,
             token::Type::Multiply => Operator::Multiply,
             token::Type::Divide => Operator::Divide,
 
-            _ => panic!("invalid infix operator token type: {:?}", self.cur.t),
+            _ => return None,
         };
 
         let precedence = self.cur_precedence();
         self.next();
 
         if let Some(right) = self.parse_expression(precedence) {
-            ast::Node::Infix{
+            Some(ast::Node::Infix{
                 left: Box::new(left),
                 op,
                 right: Box::new(right),
-            }
+            })
         } else {
             panic!("unexpected None from parse_expression")
         }
