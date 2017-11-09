@@ -22,12 +22,15 @@ impl Parser {
     pub fn new(s: String) -> Parser {
         let scan = scanner::Scanner::new(s);
 
-        let p = Parser{
+        let mut p = Parser{
             scan,
             errors: Vec::new(),
             cur: token::Token{literal: String::from(""), t: token::Type::Illegal},
             peek: token::Token{literal: String::from(""), t: token::Type::Illegal},
         };
+
+        p.next();
+        p.next();
 
         p
     }
@@ -94,6 +97,8 @@ impl Parser {
     }
 
     fn parse_infix(&mut self, left: ast::Node) -> Option<ast::Node> {
+        self.next();
+    
         if self.cur.t == token::Type::Equals {
             self.parse_equals_infix(left)
         } else {
