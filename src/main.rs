@@ -1,12 +1,9 @@
 extern crate calc;
 
-mod scanner;
-mod parser;
-
 use std::io;
 use std::io::prelude::*;
 
-use scanner::*;
+use calc::parser::*;
 
 fn main() {
     loop {
@@ -16,14 +13,9 @@ fn main() {
         let mut input = String::new();
         io::stdin().read_line(&mut input).expect("couldn't read input");
 
-        let mut scan = Scanner::new(input);
+        let parse = Parser::new(input);
+        let expr = parse.parse_expression();
 
-        loop {
-            if let Some(tok) = scan.next() {
-                println!("token: {:?}", tok);
-            } else {
-                break
-            }
-        }
+        println!("{:?}", expr);
     }
 }

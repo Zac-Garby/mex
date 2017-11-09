@@ -1,10 +1,11 @@
-use std::string::String;
+use std::cmp::Eq;
 
+#[allow(dead_code)]
 #[derive(Debug)]
 #[derive(PartialEq)]
-#[allow(dead_code)]
 #[derive(Clone)]
 #[derive(Copy)]
+#[derive(Hash)]
 pub enum Type {
     Illegal,
 
@@ -24,7 +25,10 @@ pub enum Type {
     RightParen,
 }
 
+impl Eq for Type {}
+
 #[derive(Debug)]
+#[derive(Clone)]
 pub struct Token {
     pub t: Type,
     pub literal: String,

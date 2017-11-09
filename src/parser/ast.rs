@@ -1,5 +1,6 @@
 // The various types of operators.
 #[allow(unused)]
+#[derive(Debug)]
 pub enum Operator {
     Add,
     Subtract,
@@ -8,6 +9,7 @@ pub enum Operator {
 }
 
 #[allow(dead_code)]
+#[derive(Debug)]
 pub enum Node {
     Number(f64),
     Identifier(String),
