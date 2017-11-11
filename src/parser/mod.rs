@@ -3,19 +3,25 @@ mod ast;
 use super::scanner;
 use super::scanner::token;
 use self::ast::Node::*;
-use self::ast::Operator;
 use std::num::ParseFloatError;
+use std::result;
 
-pub struct ParseError {
-    pub message: String,
+#[derive(Clone)]
+#[derive(Debug)]
+pub enum Error {
+    UnexpectedEOF,
+    WrongToken { expected: token::Type, got: token::Type },
+    NoPrefix,
+    NoInfix,
+    InvalidFloat(ParseFloatError),
 }
 
-#[allow(unused)]
+type Result<T> = result::Result<T, Error>;
+
 pub struct Parser {
     scan: scanner::Scanner,
-    errors: Vec<ParseError>,
-    cur: token::Token,
-    peek: token::Token,
+    cur: Option<token::Token>,
+    peek: Option<token::Token>,
 }
 
 impl Parser {
@@ -24,9 +30,8 @@ impl Parser {
 
         let mut p = Parser{
             scan,
-            errors: Vec::new(),
-            cur: token::Token{literal: String::from(""), t: token::Type::Illegal},
-            peek: token::Token{literal: String::from(""), t: token::Type::Illegal},
+            cur: None,
+            peek: None,
         };
 
         p.next();
@@ -36,149 +41,97 @@ impl Parser {
     }
 
     fn peek_precedence(&self) -> usize {
-        self.peek.get_precedence()
+        let peek = self.peek.clone();
+
+        match peek {
+            Some(t) => t.get_precedence(),
+            None => 0,
+        }
     }
 
     fn cur_precedence(&self) -> usize {
-        self.cur.get_precedence()
+        let cur = self.cur.clone();
+
+        match cur {
+            Some(t) => t.get_precedence(),
+            None => 0,
+        }
     }
 
     fn next(&mut self) {
-        let peek = self.peek.clone();
-        self.cur = peek;
-
-        if let Some(next) = self.scan.next() {
-            self.peek = next;
-        } else {
-            self.err("unexpected EOF")
-        }
-
-        if self.peek.t == token::Type::Illegal {
-            let literal = self.peek.literal.clone();
-            self.err(&format!("unexpected illegal token: {:?}", literal));
-        }
+        self.cur = self.peek.clone();
+        self.peek = self.scan.next();
     }
 
-    fn err(&mut self, message: &str) {
-        let err = ParseError{message: String::from(message)};
-        self.errors.push(err);
+    pub fn parse(&mut self) -> Result<ast::Node> {
+        self.parse_expression(0)
     }
 
-    fn expect(&mut self, t: token::Type) -> bool {
-        if self.peek.t == t {
-            self.next();
-            true
-        } else {
-            let got = self.peek.t.clone();
-            self.err(&format!("expected {:?}, got {:?}", t, got));
-            false
+    fn parse_expression(&mut self, precedence: usize) -> Result<ast::Node> {
+        let mut left = self.parse_prefix()?;
+
+        while self.peek.is_some() && precedence < self.peek_precedence() {
+            match self.parse_infix(left.clone()) {
+                Ok(expr) => left = expr,
+                Err(Error::NoInfix) => return Ok(left),
+                Err(e) => return Err(e),
+            };
         }
+
+        Ok(left)
     }
 
-    pub fn parse_expression(&mut self, precedence: usize) -> Option<ast::Node> {
-        let mut left = self.parse_prefix();
+    fn parse_prefix(&mut self) -> Result<ast::Node> {
+        if let Some(cur) = self.cur.clone() {
+            match cur.t {
+                token::Type::Identifier => self.parse_id(cur),
+                token::Type::Number => self.parse_num(cur),
 
-        if left.is_none() {
-            let t = self.cur.clone().t;
-            self.err(&format!("unexpected token: {:?}", t));
-            return None
-        }
-
-        while precedence < self.peek_precedence() {
-            let infix = self.parse_infix(left.clone().unwrap());
-
-            if infix.is_none() {
-                return left
+                _ => Err(Error::NoPrefix),
             }
-
-            self.next();
-            left = infix;
-        }
-
-        left
-    }
-
-    fn parse_prefix(&mut self) -> Option<ast::Node> {
-        match self.cur.t {
-            token::Type::Identifier => Some(self.parse_id()),
-            token::Type::Number     => Some(self.parse_number()),
-            token::Type::LeftParen  => Some(self.parse_group()),
-
-            _ => None,
-        }
-    }
-
-    fn parse_infix(&mut self, left: ast::Node) -> Option<ast::Node> {
-        self.next();
-    
-        if self.cur.t == token::Type::Equals {
-            self.parse_equals_infix(left)
         } else {
-            self.parse_normal_infix(left)
-        } 
-    }
-
-    fn parse_id(&mut self) -> ast::Node {
-        Identifier(self.cur.literal.clone())
-    }
-
-    fn parse_number(&mut self) -> ast::Node {
-        let val: Result<f64, ParseFloatError> = self.cur.literal.parse();
-
-        match val {
-            Ok(v) => Number(v),
-            Err(e) => panic!(e),
+            Err(Error::UnexpectedEOF)
         }
     }
 
-    fn parse_group(&mut self) -> ast::Node {
+    fn parse_id(&mut self, cur: token::Token) -> Result<ast::Node> {
+        Ok(Identifier(cur.literal))
+    }
+
+    fn parse_num(&mut self, cur: token::Token) -> Result<ast::Node> {
+        match cur.literal.parse() {
+            Ok(v) => Ok(Number(v)),
+            Err(e) => Err(Error::InvalidFloat(e)),
+        }
+    }
+
+    fn parse_infix(&mut self, left: ast::Node) -> Result<ast::Node> {
         self.next();
-        let expr = self.parse_expression(0);
 
-        self.expect(token::Type::RightParen);
+        if let Some(cur) = self.cur.clone() {
+            match cur.t {
+                token::Type::Plus |
+                token::Type::Minus |
+                token::Type::Multiply |
+                token::Type::Divide => self.parse_infix_op(cur, left),
 
-        match expr {
-            Some(e) => e,
-            None    => panic!("unexpected None in parse_group"),
+                _ => Err(Error::NoInfix),
+            }
+        } else {
+            Err(Error::UnexpectedEOF)
         }
     }
 
-    fn parse_equals_infix(&mut self, left: ast::Node) -> Option<ast::Node> {
+    fn parse_infix_op(&mut self, cur: token::Token, left: ast::Node) -> Result<ast::Node> {
+        let op = cur.literal;
         let precedence = self.cur_precedence();
         self.next();
+        let right = self.parse_expression(precedence)?;
 
-        if let Some(right) = self.parse_expression(precedence) {
-            Some(ast::Node::Infix{
-                left: Box::new(left),
-                op: Operator::Assign,
-                right: Box::new(right),
-            })
-        } else {
-            panic!("unexpected None from parse_expression")
-        }
-    }
-
-    fn parse_normal_infix(&mut self, left: ast::Node) -> Option<ast::Node> {
-        let op = match self.cur.t {
-            token::Type::Plus => Operator::Add,
-            token::Type::Minus => Operator::Subtract,
-            token::Type::Multiply => Operator::Multiply,
-            token::Type::Divide => Operator::Divide,
-
-            _ => return None,
-        };
-
-        let precedence = self.cur_precedence();
-        self.next();
-
-        if let Some(right) = self.parse_expression(precedence) {
-            Some(ast::Node::Infix{
-                left: Box::new(left),
-                op,
-                right: Box::new(right),
-            })
-        } else {
-            panic!("unexpected None from parse_expression")
-        }
+        Ok(ast::Node::Infix {
+            left: Box::new(left),
+            right: Box::new(right),
+            op
+        })
     }
 }

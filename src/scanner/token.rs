@@ -1,6 +1,5 @@
 use std::cmp::Eq;
 
-#[allow(dead_code)]
 #[derive(Debug)]
 #[derive(PartialEq)]
 #[derive(Clone)]

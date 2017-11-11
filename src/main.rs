@@ -14,8 +14,7 @@ fn main() {
         io::stdin().read_line(&mut input).expect("couldn't read input");
 
         let mut parse = Parser::new(input);
-        let expr = parse.parse_expression(0);
-
+        let expr = parse.parse();
         println!("{:?}", expr);
     }
 }
