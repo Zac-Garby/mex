@@ -91,8 +91,8 @@ impl Parser {
         let expr = self.parse_expression(0);
         
         match self.peek {
-            Some(_) => Err(Error::RemainingTokens),
-            None => expr,
+            Some(_) if expr.is_ok() => Err(Error::RemainingTokens),
+            _ => expr,
         }
     }
 
@@ -163,6 +163,8 @@ impl Parser {
     }
 
     fn parse_infix_op(&mut self, cur: token::Token, left: ast::Node) -> Result<ast::Node> {
+        println!("infix");
+
         let op = cur.literal;
         let precedence = self.cur_precedence();
         self.next();

@@ -65,6 +65,7 @@ impl Iterator for Scanner {
             Some('+') => ("+".to_string(), token::Type::Plus, true),
             Some('-') => ("-".to_string(), token::Type::Minus, true),
             Some('*') => ("*".to_string(), token::Type::Multiply, true),
+            Some('/') => ("/".to_string(), token::Type::Divide, true),
             Some('(') => ("(".to_string(), token::Type::LeftParen, true),
             Some(')') => (")".to_string(), token::Type::RightParen, true),
             Some('=') => ("=".to_string(), token::Type::Equals, true),
