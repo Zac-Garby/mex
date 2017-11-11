@@ -13,6 +13,7 @@ pub enum Error {
     WrongToken { expected: token::Type, got: token::Type },
     NoPrefix,
     NoInfix,
+    NonIDAssign,
     InvalidFloat(ParseFloatError),
 }
 
@@ -115,6 +116,8 @@ impl Parser {
                 token::Type::Multiply |
                 token::Type::Divide => self.parse_infix_op(cur, left),
 
+                token::Type::Equals => self.parse_equals_op(cur, left),
+
                 _ => Err(Error::NoInfix),
             }
         } else {
@@ -133,5 +136,22 @@ impl Parser {
             right: Box::new(right),
             op
         })
+    }
+
+    fn parse_equals_op(&mut self, cur: token::Token, left: ast::Node) -> Result<ast::Node> {
+        if let Identifier(_) = left {
+            let op = cur.literal;
+            let precedence = self.cur_precedence();
+            self.next();
+            let right = self.parse_expression(precedence)?;
+
+            Ok(ast::Node::Infix {
+                left: Box::new(left),
+                right: Box::new(right),
+                op
+            })
+        } else {
+            Err(Error::NonIDAssign)
+        }
     }
 }
