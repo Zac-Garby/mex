@@ -65,6 +65,29 @@ impl Parser {
         self.peek = self.scan.next();
     }
 
+    fn peek_is(&mut self, t: token::Type) -> bool {
+        match self.peek.clone() {
+            Some(tok) => tok.t == t,
+            None => false,
+        }
+    }
+
+    fn expect(&mut self, t: token::Type) -> Result<()> {
+        if self.peek_is(t) {
+            self.next();
+            Ok(())
+        } else {
+            match self.peek.clone() {
+                Some(tok) => Err(Error::WrongToken{
+                    expected: t,
+                    got: tok.t,
+                }),
+
+                None => Err(Error::UnexpectedEOF),
+            }
+        }
+    }
+
     pub fn parse(&mut self) -> Result<ast::Node> {
         let expr = self.parse_expression(0);
         
@@ -93,6 +116,7 @@ impl Parser {
             match cur.t {
                 token::Type::Identifier => self.parse_id(cur),
                 token::Type::Number => self.parse_num(cur),
+                token::Type::LeftParen => self.parse_group(),
 
                 _ => Err(Error::NoPrefix),
             }
@@ -110,6 +134,14 @@ impl Parser {
             Ok(v) => Ok(Number(v)),
             Err(e) => Err(Error::InvalidFloat(e)),
         }
+    }
+
+    fn parse_group(&mut self) -> Result<ast::Node> {
+        self.next();
+        let expr = self.parse_expression(0);
+        self.expect(token::Type::RightParen)?;
+
+        expr
     }
 
     fn parse_infix(&mut self, left: ast::Node) -> Result<ast::Node> {
