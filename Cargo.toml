@@ -2,9 +2,9 @@
 name = "mex"
 description = "A maths expression parser/evaluator"
 license = "MIT"
-license-file = "LICENSE"
 homepage = "https://github.com/Zac-Garby/mex"
 repository = "https://github.com/Zac-Garby/mex"
+readme = "./README.md"
 version = "0.1.0"
 authors = ["Zac Garby <zacgarby@icloud.com>"]
 
