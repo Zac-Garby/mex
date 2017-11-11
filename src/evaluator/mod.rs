@@ -20,23 +20,29 @@ pub fn eval_node_in(node: ast::Node, ctx: &mut context::Context) -> Result<objec
         ast::Node::Number(val) => Ok(Object::Number(val)),
 
         ast::Node::Infix{left, right, op} => {
-            let left = eval_node_in(*left, ctx)?;
-            let right = eval_node_in(*right, ctx)?;
+            if let Node::Identifier(id) = *left {
+                let right = eval_node_in(*right, ctx)?;
+                ctx.set(&id, right.clone());
+                Ok(right)
+            } else {
+                let left = eval_node_in(*left, ctx)?;
+                let right = eval_node_in(*right, ctx)?;
 
-            match (left, right) {
-                (Object::Number(l), Object::Number(r)) => {
-                    Ok(Object::Number(match op.as_ref() {
-                        "+" => l + r,
-                        "-" => l - r,
-                        "*" => l * r,
-                        "/" => l / r,
+                match (left, right) {
+                    (Object::Number(l), Object::Number(r)) => {
+                        Ok(Object::Number(match op.as_ref() {
+                            "+" => l + r,
+                            "-" => l - r,
+                            "*" => l * r,
+                            "/" => l / r,
 
-                        _ => return Err(Error::InvalidOperator),
-                    }))
+                            _ => return Err(Error::InvalidOperator),
+                        }))
+                    }
+
+                    _ => Err(Error::InvalidOperands),
                 }
-
-                _ => Err(Error::InvalidOperands),
-            }
+            }            
         }
 
         _ => Err(Error::NotImplemented),

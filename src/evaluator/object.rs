@@ -1,6 +1,7 @@
 use std::fmt;
 
 #[derive(Debug)]
+#[derive(Clone)]
 pub enum Object {
     Number(f64),
 }
