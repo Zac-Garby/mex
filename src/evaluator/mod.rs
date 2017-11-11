@@ -28,13 +28,19 @@ pub fn eval_node_in(node: ast::Node, ctx: &mut context::Context) -> Result<objec
         }
 
         ast::Node::Infix{left, right, op} => {
-            if let Node::Identifier(id) = *left {
-                let right = eval_node_in(*right, ctx)?;
-                ctx.set(&id, right.clone());
-                Ok(right)
+            if op == "=" {
+                if let Node::Identifier(id) = *left {
+                    let right = eval_node_in(*right, ctx)?;
+                    ctx.set(&id, right.clone());
+                    Ok(right)
+                } else {
+                    unreachable!();
+                }
             } else {
                 let left = eval_node_in(*left, ctx)?;
                 let right = eval_node_in(*right, ctx)?;
+
+                println!("{:?} {:?} {:?}", left, op, right);
 
                 match (left, right) {
                     (Object::Number(l), Object::Number(r)) => {
@@ -47,8 +53,6 @@ pub fn eval_node_in(node: ast::Node, ctx: &mut context::Context) -> Result<objec
                             _ => return Err(Error::InvalidOperator),
                         }))
                     }
-
-                    _ => Err(Error::InvalidOperands),
                 }
             }            
         }
