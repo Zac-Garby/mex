@@ -13,7 +13,6 @@ pub enum Error {
     InvalidOperands,
     InvalidOperator,
     NotDefined,
-    NotImplemented,
 }
 
 pub fn eval_node_in(node: ast::Node, ctx: &mut context::Context) -> Result<object::Object> {
@@ -53,8 +52,6 @@ pub fn eval_node_in(node: ast::Node, ctx: &mut context::Context) -> Result<objec
                 }
             }            
         }
-
-        _ => Err(Error::NotImplemented),
     }
 }
 
