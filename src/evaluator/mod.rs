@@ -40,8 +40,6 @@ pub fn eval_node_in(node: ast::Node, ctx: &mut context::Context) -> Result<objec
                 let left = eval_node_in(*left, ctx)?;
                 let right = eval_node_in(*right, ctx)?;
 
-                println!("{:?} {:?} {:?}", left, op, right);
-
                 match (left, right) {
                     (Object::Number(l), Object::Number(r)) => {
                         Ok(Object::Number(match op.as_ref() {
