@@ -163,8 +163,6 @@ impl Parser {
     }
 
     fn parse_infix_op(&mut self, cur: token::Token, left: ast::Node) -> Result<ast::Node> {
-        println!("infix");
-
         let op = cur.literal;
         let precedence = self.cur_precedence();
         self.next();
