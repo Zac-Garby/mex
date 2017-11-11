@@ -3,8 +3,8 @@ extern crate calc;
 use std::io;
 use std::io::prelude::*;
 
-use calc::parser::*;
-use calc::evaluator::*;
+use calc::parser;
+use calc::evaluator;
 
 fn main() {
     loop {
@@ -14,8 +14,16 @@ fn main() {
         let mut input = String::new();
         io::stdin().read_line(&mut input).expect("couldn't read input");
 
-        let mut parse = Parser::new(input);
-        let expr = parse.parse();
-        println!("{:?}", expr);
+        let mut parse = parser::Parser::new(input);
+        match parse.parse() {
+            Ok(node) => {
+                match evaluator::eval_node(node) {
+                    Ok(result) => println!("{}", result),
+                    Err(err) => println!("eval error: {:?}", err),
+                }
+            }
+
+            Err(e) => println!("parse error: {:?}", e),
+        };
     }
 }

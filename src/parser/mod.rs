@@ -1,4 +1,4 @@
-mod ast;
+pub mod ast;
 
 use super::scanner;
 use super::scanner::token;
@@ -6,7 +6,6 @@ use self::ast::Node::*;
 use std::num::ParseFloatError;
 use std::result;
 
-#[derive(Clone)]
 #[derive(Debug)]
 pub enum Error {
     UnexpectedEOF,
