@@ -1,12 +1,11 @@
-extern crate calc;
+extern crate mex;
 
 use std::io;
 use std::io::prelude::*;
 
-use calc::parser;
-use calc::evaluator;
-use calc::evaluator::context;
-use calc::evaluator::object;
+use mex::parser;
+use mex::evaluator;
+use mex::evaluator::context;
 
 fn main() {
     let mut context = context::Context::new();
