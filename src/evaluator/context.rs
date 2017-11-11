@@ -8,18 +8,22 @@ pub struct Context <'a> {
 
 impl <'a> Context <'a> {
     pub fn new() -> Context<'a> {
+        let store = HashMap::new();
+
         Context{
-            store: HashMap::new(),
+            store: store,
             outer: None,
         }
     }
 
-    pub fn inside(outer: &'a mut Context<'a>) -> Context<'a> {
+    /* pub fn inside(outer: &'a mut Context<'a>) -> Context<'a> {
+        let store = HashMap::new();
+
         Context{
-            store: HashMap::new(),
+            store: &mut store,
             outer: Some(outer),
         }
-    }
+    } */
 
     pub fn has(&self, name: &String) -> bool {
         self.store.contains_key(name)
@@ -39,7 +43,7 @@ impl <'a> Context <'a> {
         self.store.insert(name.clone(), value);
     }
 
-    pub fn get(&'a self, name: String) -> Option<&'a object::Object> {
+    pub fn get<'b>(&'b self, name: String) -> Option<&'b object::Object> {
         if self.store.contains_key(&name) {
             self.store.get(&name)
         } else {

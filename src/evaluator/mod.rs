@@ -12,12 +12,21 @@ type Result<T> = result::Result<T, Error>;
 pub enum Error {
     InvalidOperands,
     InvalidOperator,
+    NotDefined,
     NotImplemented,
 }
 
 pub fn eval_node_in(node: ast::Node, ctx: &mut context::Context) -> Result<object::Object> {
     match node {
         ast::Node::Number(val) => Ok(Object::Number(val)),
+
+        ast::Node::Identifier(id) => {
+            if let Some(val) = ctx.get(id) {
+                Ok(val.clone())
+            } else {
+                Err(Error::NotDefined)
+            }
+        }
 
         ast::Node::Infix{left, right, op} => {
             if let Node::Identifier(id) = *left {
