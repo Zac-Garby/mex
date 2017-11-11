@@ -5,9 +5,11 @@ use std::io::prelude::*;
 
 use calc::parser;
 use calc::evaluator;
+use calc::evaluator::context;
+use calc::evaluator::object;
 
 fn main() {
-    let mut context = evaluator::context::Context::new();
+    let mut context = context::Context::new();
 
     loop {
         print!(">> ");
