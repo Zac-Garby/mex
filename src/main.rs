@@ -4,6 +4,7 @@ use std::io;
 use std::io::prelude::*;
 
 use calc::parser::*;
+use calc::evaluator::*;
 
 fn main() {
     loop {
