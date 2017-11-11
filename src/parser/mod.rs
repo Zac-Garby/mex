@@ -14,6 +14,7 @@ pub enum Error {
     NoPrefix,
     NoInfix,
     NonIDAssign,
+    RemainingTokens,
     InvalidFloat(ParseFloatError),
 }
 
@@ -65,7 +66,12 @@ impl Parser {
     }
 
     pub fn parse(&mut self) -> Result<ast::Node> {
-        self.parse_expression(0)
+        let expr = self.parse_expression(0);
+        
+        match self.peek {
+            Some(_) => Err(Error::RemainingTokens),
+            None => expr,
+        }
     }
 
     fn parse_expression(&mut self, precedence: usize) -> Result<ast::Node> {
