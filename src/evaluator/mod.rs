@@ -1,5 +1,5 @@
-mod object;
-mod context;
+pub mod object;
+pub mod context;
 
 use super::parser::ast;
 use self::ast::Node;
