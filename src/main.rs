@@ -7,6 +7,8 @@ use calc::parser;
 use calc::evaluator;
 
 fn main() {
+    let mut context = evaluator::context::Context::new();
+
     loop {
         print!(">> ");
         io::stdout().flush().expect("couldn't flush stdout");
@@ -15,11 +17,10 @@ fn main() {
         io::stdin().read_line(&mut input).expect("couldn't read input");
 
         let mut parse = parser::Parser::new(input);
-        let mut context = evaluator::context::Context::new();
 
         match parse.parse() {
             Ok(node) => {
-                match evaluator::eval_node_in(node, context) {
+                match evaluator::eval_node_in(node, &mut context) {
                     Ok(result) => println!("{}", result),
                     Err(err) => println!("eval error: {:?}", err),
                 }

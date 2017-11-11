@@ -16,14 +16,14 @@ impl <'a> Context <'a> {
         }
     }
 
-    /* pub fn inside(outer: &'a mut Context<'a>) -> Context<'a> {
+    pub fn inside(outer: &'a mut Context<'a>) -> Context<'a> {
         let store = HashMap::new();
 
         Context{
-            store: &mut store,
+            store: store,
             outer: Some(outer),
         }
-    } */
+    }
 
     pub fn has(&self, name: &String) -> bool {
         self.store.contains_key(name)
